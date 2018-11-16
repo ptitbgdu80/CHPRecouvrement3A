@@ -42,7 +42,7 @@ void DataFile::ReadDataFile()
 
     if (file_line.find("choix") != std::string::npos)
     {
-      data_file >> _choix; _if_tmax = true;
+      data_file >> _choix; _if_choix = true;
     }
 
     if (file_line.find("Dt") != std::string::npos)
@@ -167,6 +167,12 @@ void DataFile::ReadDataFile()
       cout << "Beware - The default value of the recovery is used for the velocity." << endl;
     }
     _NbLignes= 5;
+  }
+  if (_Me == 0)
+  {
+    cout << "-------------------------------------------------" << endl;
+    cout << "Read end" << endl;
+    cout << "-------------------------------------------------" << endl;
   }
 }
 
