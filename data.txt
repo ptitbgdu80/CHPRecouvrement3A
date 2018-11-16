@@ -18,7 +18,7 @@ Nombre lignes
 Nombre colonnes
 10
 Recouvrement
-4
+3
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y

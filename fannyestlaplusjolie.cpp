@@ -129,30 +129,31 @@ void Probleme::initializeSolver()
     liste_elem.push_back({_NbCol+indice,indice,_C3});
   }
 
-  Eigen::SparseMatrix<double> Ap;
-  Ap.resize((_iN-_i1-1)*_NbCol,(_iN-_i1-1)*_NbCol);
-  Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
+
+  _Ap.resize((_iN-_i1-1)*_NbCol,(_iN-_i1-1)*_NbCol);
+  _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
 
   //Bord bas
   for (int indice = 0; indice < _NbCol; indice ++)
   {
     //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
-    Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
+    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
   }
   //Bord haut
   for (int indice = _NbCol*(_iN-_i1-2); indice < _NbCol*(_iN-_i1-1); indice ++)
   {
     //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
-    Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
+    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
   }
 
-  _solver.compute(Ap);
+  _solver.compute(_Ap);
 
   if (_Me == 0)
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Initialisation terminée" << std::endl;
   }
+
 }
 
 double Probleme::f(double x, double y, double t)
@@ -258,10 +259,10 @@ void Probleme::calculB()
       }
      }
    }
-   if (_Me==0)
-   {
-     //std::cout << _Bp << std::endl;
-   }
+  //  if (_Me==0)
+  //  {
+  //    std::cout << _Bp << std::endl;
+  //  }
  }
 
 
@@ -351,18 +352,19 @@ void Probleme::TimeIteration()
     std::cout << "Boucle temporelle de résolution du problème" << std::endl;
   }
  _t=0.;
-  // while (_t<=_tmax)
-  // {
-  //
-  //   _t=_t +_Dt;
+  while (_t<=_tmax)
+  {
+
+    _t=_t +_Dt;
     communication();
 
       calculB();
-      std::cout << _Me << " lol1" << std::endl;
+    //  std::cout << _Me << " lol1" << std::endl;
      _Up=_solver.solve(_Bp);
-      std::cout << _Me << "lo000000000000000000000000000000l2" << std::endl;
-    //     std::cout << "lol3" << std::endl;
-  // }
+      //std::cout << _Me << "lo000000000000000000000000000000l2" << std::endl;
+      Rename();
+      Save();
+  }
 }
 
 void Probleme::Rename()

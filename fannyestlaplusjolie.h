@@ -15,6 +15,7 @@ class Probleme
 {
 private:
   Eigen::ConjugateGradient <Eigen::SparseMatrix<double> > _solver;
+  Eigen::SparseMatrix<double> _Ap;
   Eigen::VectorXd _Up, _Bp, _CondBas, _CondHaut;
   int _NbLignes, _NbCol, _Np, _Me, _rec, _i1, _iN;
   int _choix;
