@@ -14,7 +14,7 @@
 class Probleme
 {
 private:
-  Eigen::SparseMatrix<double> _Ap;
+  Eigen::ConjugateGradient <Eigen::SparseMatrix<double> > _solver;
   Eigen::VectorXd _Up, _Bp, _CondBas, _CondHaut;
   int _NbLignes, _NbCol, _Np, _Me, _rec, _i1, _iN;
   int _choix;
@@ -29,7 +29,7 @@ public:
 
   void charge();
 
-  void initializeMatrix();
+  void initializeSolver();
 
   double f(double x, double y, double t);
 

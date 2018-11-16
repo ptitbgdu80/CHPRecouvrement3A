@@ -1,14 +1,13 @@
 
 
-Conditions aux limites
+Conditions aux interfaces
 0. 1.
 #alpha beta
-#alpha du/dy + beta u (Dirichlet : alpha = 0, Neumann : beta = 0)
+#CL = alpha du/dy + beta u    -     (Dirichlet : alpha = 0, Neumann : beta = 0)
 
-choix
+Choix du terme source et des termes de bord
 stationnaire1
-#stationnaire2
-#instationnaire
+#stationnaire1, stationnaire2 ou instationnaire
 
 tmax
 2.0
@@ -18,7 +17,7 @@ Nombre lignes
 100
 Nombre colonnes
 100
-recouvrement
+Recouvrement
 5
 Dimension du domaine selon x
 1.

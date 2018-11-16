@@ -95,11 +95,13 @@ void Probleme::charge()
 
   _Bp.Zero((_iN-_i1-1)*_NbCol);
   _Up.Zero((_iN-_i1-1)*_NbCol);
-  _Ap.resize((_iN-_i1-1)*_NbCol,(_iN-_i1-1)*_NbCol);
 }
 
-void Probleme::initializeMatrix()
+void Probleme::initializeSolver()
 {
+  std::cout << "-------------------------------------------------" << std::endl;
+  std::cout << "Initialisation des solveurs (création des matrices)" << std::endl;
+
   std::vector<Eigen::Triplet<double>> liste_elem;
 
   for (int indice = 0; indice < (_iN-_i1-1)*_NbCol; indice++)
@@ -122,20 +124,27 @@ void Probleme::initializeMatrix()
     liste_elem.push_back({_NbCol+indice,indice,_C3});
   }
 
-  _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
+  Eigen::SparseMatrix<double> Ap;
+  Ap.resize((_iN-_i1-1)*_NbCol,(_iN-_i1-1)*_NbCol);
+  Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
 
   //Bord bas
   for (int indice = 0; indice < _NbCol; indice ++)
   {
     //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
-    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
+    Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
   }
   //Bord haut
   for (int indice = _NbCol*(_iN-_i1-2); indice < _NbCol*(_iN-_i1-1); indice ++)
   {
     //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
-    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
+    Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
   }
+
+  _solver.compute(Ap);
+
+  std::cout << "-------------------------------------------------" << std::endl;
+  std::cout << "Initialisation terminée" << std::endl;
 }
 
 double Probleme::f(double x, double y, double t)
@@ -309,7 +318,6 @@ void Probleme::Rename(double t)
   b =(_Me - 100*a)/10;
   c = _Me - 100*a -10*b;
   tn = std::to_string(a) + std::to_string(b) + std::to_string(c);
-//  tn= 'bla';
   _savefile = "sol" + tn + "t" + std::to_string(t) + ".dat";
 }
 

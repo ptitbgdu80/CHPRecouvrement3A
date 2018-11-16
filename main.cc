@@ -11,7 +11,7 @@ int main(int argc, char * argv[])
 
   Probleme Pb1(file);
   Pb1.charge();
-  Pb1.initializeMatrix();
+  Pb1.initializeSolver();
 
   MPI_Finalize();
   return 0;
