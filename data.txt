@@ -1,0 +1,29 @@
+
+
+Conditions aux limites
+#alpha du/dy + beta u (Dirichlet : alpha = 0, Neumann : beta = 0)
+Dirichlet 0. 1.
+#Dirichlet alpha, beta
+#Robin alpha beta
+
+choix
+stationnaire1
+#stationnaire2
+#instationnaire
+
+tmax
+2.0
+Dt
+0.02
+Nombre lignes
+100
+Nombre colonnes
+100
+recouvrement
+6
+Dimension du domaine selon x
+1.
+Dimension du domaine selon y
+1.
+Coefficient de diffusion D
+1.
