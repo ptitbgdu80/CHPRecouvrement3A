@@ -19,13 +19,13 @@ void DataFile::ReadDataFile()
   {
     if (!data_file.is_open())
     {
-      cout << "Unable to open file " << _file_name << endl;
+      cout << "Impossible d'ouvrir le fichier " << _file_name << endl;
       abort();
     }
     else
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Reading data file " << _file_name << endl;
+      cout << "Lecture du fichier " << _file_name << endl;
     }
   }
 
@@ -91,7 +91,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value (10) is used for tmax." << endl;
+      cout << "Attention - tmax est défini à 10 par défaut" << endl;
     }
     _tmax = 10.;
   }
@@ -100,7 +100,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value (0.001) is used for Dt." << endl;
+      cout << "Attention - Dt est défini à 0.01 par défaut" << endl;
     }
     _Dt = 0.01;
   }
@@ -109,7 +109,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default choice (stationnaire1) is used." << endl;
+      cout << "Attention - Le terme source est défini à stationnaire1 par défaut" << endl;
     }
     _choix = "stationnaire1";
   }
@@ -118,7 +118,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default boundary condition is used." << endl;
+      cout << "Attention - La condition aux interfaces est définie à Dirichlet par défaut" << endl;
     }
     _alpha = 0.;
     _beta = 1.;
@@ -128,7 +128,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value of the recovery is used for the velocity." << endl;
+      cout << "Attention - Le recouvrement est défini à 3 par défaut" << endl;
     }
     _rec = 3;
   }
@@ -137,7 +137,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value of the recovery is used for the velocity." << endl;
+      cout << "Attention - La longueur selon x est définie à 1 par défaut" << endl;
     }
     _Lx = 1.;
   }
@@ -146,7 +146,7 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value of the recovery is used for the velocity." << endl;
+      cout << "Attention - La longueur selon y est définie à 1 par défaut" << endl;
     }
     _Ly = 1.;
   }
@@ -155,23 +155,23 @@ void DataFile::ReadDataFile()
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value of the recovery is used for the velocity." << endl;
+      cout << "Attention - Le nombre de colonnes est défini à 10 par défaut" << endl;
     }
-    _NbCol = 5;
+    _NbCol = 10;
   }
   if (!_if_NbLignes)
   {
     if (_Me == 0)
     {
       cout << "-------------------------------------------------" << endl;
-      cout << "Beware - The default value of the recovery is used for the velocity." << endl;
+      cout << "Attention - Le nombre de lignes est défini à 100 par défaut" << endl;
     }
     _NbLignes= 5;
   }
   if (_Me == 0)
   {
     cout << "-------------------------------------------------" << endl;
-    cout << "Read end" << endl;
+    cout << "Fin de lecture du fichier " << _file_name << endl;
     cout << "-------------------------------------------------" << endl;
   }
 }
