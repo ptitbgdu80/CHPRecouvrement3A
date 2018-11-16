@@ -12,6 +12,8 @@ int main(int argc, char * argv[])
   Pb1.charge();
   Pb1.initializeSolver();
 
+  Pb1.TimeIteration();
+  std::cout<<" test"<<std::endl;
   MPI_Finalize();
   return 0;
 }

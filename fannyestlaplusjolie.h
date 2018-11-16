@@ -44,4 +44,6 @@ public:
   void Rename();
 
   void Save();
+
+  void TimeIteration();
 };

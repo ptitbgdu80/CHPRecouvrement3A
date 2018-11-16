@@ -20,8 +20,8 @@ Probleme::Probleme(DataFile file)
   _C1 = 1./_Dt + 2.*_D*(1./pow(_Dx,2)+1./pow(_Dy,2));
   _C2 = -_D/pow(_Dx,2);
   _C3 = -_D/pow(_Dy,2);
-  _CondBas.Zero(_NbCol);
-  _CondHaut.Zero(_NbCol);
+  _CondBas.setZero(_NbCol);
+  _CondHaut.setZero(_NbCol);
 
 
   //Cette exception pose problème mais ça serait vraiment pas de bol...
@@ -93,8 +93,10 @@ void Probleme::charge()
     _iN += recHaut;
   }
 
-  _Bp.Zero((_iN-_i1-1)*_NbCol);
-  _Up.Zero((_iN-_i1-1)*_NbCol);
+  //std::cout << "Me:"<<  _Me <<"i1:" << _i1 << "iN:" << _iN <<std::endl;
+
+  _Bp.setZero((_iN-_i1-1)*_NbCol);
+  _Up.setZero((_iN-_i1-1)*_NbCol);
 }
 
 void Probleme::initializeSolver()
@@ -225,25 +227,25 @@ void Probleme::calculB()
   {
     for (int nc = 1; nc < _NbCol+1; nc++)
     {
+
       //Cas général B = f + u^n/Dt
       _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Up[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
-
-      if (nl == 1)
-      {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,0)/pow(_Dy,2);
-      }
-      else if (nl == _NbLignes)
-      {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,_Ly)/pow(_Dy,2);
-      }
-      else if (nl == _i1+1)
-      {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _C3*_CondBas[nc-1]*_Dy/(_alpha-_beta*_Dy);
-      }
-      else if (nl == _iN-1)
-      {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]-= _C3*_CondHaut[nc-1]*_Dy/(_alpha+_beta*_Dy);
-      }
+       if (nl == 1)
+       {
+         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,0)/pow(_Dy,2);
+       }
+       else if (nl == _NbLignes)
+       {
+         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,_Ly)/pow(_Dy,2);
+       }
+        else if (nl == _i1+1)
+        {
+          _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _C3*_CondBas[nc-1]*_Dy/(_alpha-_beta*_Dy);
+        }
+       else if (nl == _iN-1)
+       {
+         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= -_C3*_CondHaut[nc-1]*_Dy/(_alpha+_beta*_Dy);
+       }
 
 
       if (nc == 1)
@@ -254,42 +256,62 @@ void Probleme::calculB()
       {
         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*h(_Lx,nl*_Dy)/pow(_Dx,2);
       }
-    }
-  }
-}
+     }
+   }
+   if (_Me==0)
+   {
+     //std::cout << _Bp << std::endl;
+   }
+ }
+
+
 
 void Probleme::communication()
 {
   Eigen::VectorXd tempHaut, tempBas; //Dans ces vecteurs on stocke la valeur de la condition de bord alpha dU + beta U qu'on enverra en haut et en bas
   tempBas.resize(_NbCol);
   tempHaut.resize(_NbCol);
-  for (int nc = 1; nc <= _NbCol; nc++)
-  {
-    // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
-    tempHaut[nc-1] = _alpha/_Dy*(_Up[(_iN-_i1-_rec)*_NbCol] - _Up[(_iN-_i1-_rec-1)*_NbCol]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol];
-    // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
-    tempBas[nc-1] = _alpha/_Dy*(_Up[(_rec-1)*_NbCol] - _Up[(_rec-2)*_NbCol]) + _beta*_Up[(_rec-2)*_NbCol];
-  }
+  MPI_Request req1;
+  int recHaut = _rec/2;
+  int recBas = (_rec+1)/2;
+  if (_Me==0)
 
+  for (int nc = 0; nc < _NbCol; nc++)
+  {
+      // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
+    if (_Me!=_Np-1)
+    {
+      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-2-recBas)*_NbCol+nc] - _Up[(_iN-_i1-3-recBas)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
+    }
+      // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
+    if (_Me!=0)
+    {
+      tempBas[nc] = (_alpha/_Dy)*(_Up[(recHaut+1)*_NbCol+nc] - _Up[(recHaut)*_NbCol+nc]) + _beta*_Up[(recHaut)*_NbCol+nc];
+    }
+  }
   //Les procs pairs envoient puis reçoivent
   if (_Me%2 == 0)
   {
-    if (_Me!=0)
-    {
-      MPI_Send(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD);
-    }
     if (_Me!=_Np-1)
     {
-      MPI_Send(&tempBas[0],_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD);
+      MPI_Isend(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD,&req1);
+      //std::cout << _Me << " comm1 " << std::endl;
+    }
+    if (_Me!=0)
+    {
+      MPI_Isend(&tempBas[0],_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD,&req1);
+      //std::cout << _Me << " comm1 " << std::endl;
     }
 
     if (_Me!=0)
     {
-      MPI_Recv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &_Status);
+      MPI_Irecv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &req1);
+      //std::cout << _Me << " comm2 " << std::endl;
     }
     if (_Me!=_Np-1)
     {
-      MPI_Recv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &_Status);
+      MPI_Irecv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &req1);
+      //std::cout << _Me << " comm2 " << std::endl;
     }
   }
 
@@ -298,22 +320,49 @@ void Probleme::communication()
   {
     if (_Me!=0)
     {
-      MPI_Recv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &_Status);
+      MPI_Irecv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &req1);
+      //std::cout << _Me << " comm3 " << std::endl;
     }
     if (_Me!=_Np-1)
     {
-      MPI_Recv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &_Status);
+      MPI_Irecv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &req1);
+      //std::cout << _Me << " comm3 " << std::endl;
     }
 
-    if (_Me!=0)
-    {
-      MPI_Send(&tempHaut,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD);
-    }
     if (_Me!=_Np-1)
     {
-      MPI_Send(&tempBas,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD);
+      MPI_Isend(&tempHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD,&req1);
+      //std::cout << _Me << " comm4 " << std::endl;
+    }
+    if (_Me!=0)
+    {
+      MPI_Isend(&tempBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD,&req1);
+      //std::cout << _Me << " comm4 " << std::endl;
     }
   }
+}
+
+
+void Probleme::TimeIteration()
+{
+  if (_Me == 0)
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Boucle temporelle de résolution du problème" << std::endl;
+  }
+ _t=0.;
+  // while (_t<=_tmax)
+  // {
+  //
+  //   _t=_t +_Dt;
+    communication();
+
+      calculB();
+      std::cout << _Me << " lol1" << std::endl;
+     _Up=_solver.solve(_Bp);
+      std::cout << _Me << "lo000000000000000000000000000000l2" << std::endl;
+    //     std::cout << "lol3" << std::endl;
+  // }
 }
 
 void Probleme::Rename()
