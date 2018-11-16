@@ -99,8 +99,11 @@ void Probleme::charge()
 
 void Probleme::initializeSolver()
 {
-  std::cout << "-------------------------------------------------" << std::endl;
-  std::cout << "Initialisation des solveurs (création des matrices)" << std::endl;
+  if (_Me == 0)
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Initialisation des solveurs (création des matrices)" << std::endl;
+  }
 
   std::vector<Eigen::Triplet<double>> liste_elem;
 
@@ -143,8 +146,11 @@ void Probleme::initializeSolver()
 
   _solver.compute(Ap);
 
-  std::cout << "-------------------------------------------------" << std::endl;
-  std::cout << "Initialisation terminée" << std::endl;
+  if (_Me == 0)
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Initialisation terminée" << std::endl;
+  }
 }
 
 double Probleme::f(double x, double y, double t)
