@@ -41,7 +41,7 @@ public:
 
   void communication();
 
-  void Rename(double t);
+  void Rename();
 
   void Save();
 };

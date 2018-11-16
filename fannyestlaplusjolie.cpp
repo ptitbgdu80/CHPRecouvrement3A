@@ -310,7 +310,7 @@ void Probleme::communication()
   }
 }
 
-void Probleme::Rename(double t)
+void Probleme::Rename()
 {
   std::string tn;
   int a,b,c;
@@ -318,7 +318,7 @@ void Probleme::Rename(double t)
   b =(_Me - 100*a)/10;
   c = _Me - 100*a -10*b;
   tn = std::to_string(a) + std::to_string(b) + std::to_string(c);
-  _savefile = "sol" + tn + "t" + std::to_string(t) + ".dat";
+  _savefile = "sol" + tn + "t" + std::to_string(_t) + ".dat";
 }
 
 void Probleme::Save()
