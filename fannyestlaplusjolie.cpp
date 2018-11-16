@@ -265,8 +265,6 @@ void Probleme::calculB()
   //  }
  }
 
-
-
 void Probleme::communication()
 {
   Eigen::VectorXd tempHaut, tempBas; //Dans ces vecteurs on stocke la valeur de la condition de bord alpha dU + beta U qu'on enverra en haut et en bas
@@ -343,7 +341,6 @@ void Probleme::communication()
   }
 }
 
-
 void Probleme::TimeIteration()
 {
   if (_Me == 0)
@@ -354,16 +351,14 @@ void Probleme::TimeIteration()
  _t=0.;
   while (_t<=_tmax)
   {
-
-    _t=_t +_Dt;
     communication();
-
       calculB();
     //  std::cout << _Me << " lol1" << std::endl;
      _Up=_solver.solve(_Bp);
       //std::cout << _Me << "lo000000000000000000000000000000l2" << std::endl;
       Rename();
       Save();
+      _t=_t +_Dt;
   }
 }
 
@@ -383,10 +378,12 @@ void Probleme::Save()
   int recHaut = _rec/2;
   int recBas = (_rec+1)/2;
   system(("mkdir -p ./" + std::to_string(_t)).c_str());
-  std::ofstream mon_flux; // Contruit un objet "ofstream"
+  std::string path="/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile;
+  std::ofstream mon_flux (path.c_str()); // Contruit un objet "ofstream"
   mon_flux.open(_savefile, std::ios::out); // Ouvre un fichier appelé name_file
   if (_Me==0)
   {
+    std ::cout << "helloworld"<<std::endl;
     for (int i=_i1; i<_iN-_i1-recHaut-2; i++)
     {
       for(int j=0; j<_NbCol; j++)
@@ -397,6 +394,7 @@ void Probleme::Save()
   }
   else if (_Me== _Np-1)
   {
+    std ::cout << "hello"<<std::endl;
     for (int i=recBas-1; i<_iN; i++)
     {
       for(int j=0; j<_NbCol; j++)
