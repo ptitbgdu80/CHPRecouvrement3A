@@ -16,10 +16,10 @@ class Probleme
 private:
   Eigen::SparseMatrix<double> _Ap;
   Eigen::VectorXd _Up, _Bp, _CondBas, _CondHaut;
-  int _NbLignes, _NbCol, _Np, _Me, _rec, _i1, _iN, _t;
+  int _NbLignes, _NbCol, _Np, _Me, _rec, _i1, _iN;
   int _choix;
   enum {stationnaire1, stationnaire2, instationnaire};
-  double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3;
+  double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3, _t;
   MPI_Status _Status;
   std::string _savefile;
 public:
