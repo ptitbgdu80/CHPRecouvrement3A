@@ -5,8 +5,8 @@
 using namespace std;
 
 DataFile::DataFile(std::string file_name)
-: _file_name(file_name), _if_tmax(false), _if_Dt(false), _if_D(false),
-_if_Lx(false), _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_CL(false)
+: _file_name(file_name), _if_CL(false), _if_choix(false), _if_tmax(false), _if_Dt(false),
+_if_Lx(false), _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_D(false)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
 }
@@ -103,6 +103,15 @@ void DataFile::ReadDataFile()
       cout << "Attention - Dt est défini à 0.01 par défaut" << endl;
     }
     _Dt = 0.01;
+  }
+  if (!_if_D)
+  {
+    if (_Me == 0)
+    {
+      cout << "-------------------------------------------------" << endl;
+      cout << "Attention - D est défini à 1 par défaut" << endl;
+    }
+    _D = 1;
   }
   if (!_if_choix)
   {
