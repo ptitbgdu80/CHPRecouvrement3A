@@ -378,9 +378,9 @@ void Probleme::Save()
   int recHaut = _rec/2;
   int recBas = (_rec+1)/2;
   system(("mkdir -p ./" + std::to_string(_t)).c_str());
-  std::string path="/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile;
-  std::ofstream mon_flux (path.c_str()); // Contruit un objet "ofstream"
-  mon_flux.open(_savefile, std::ios::out); // Ouvre un fichier appelé name_file
+//  std::string path="/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile;
+  std::ofstream mon_flux ; // Contruit un objet "ofstream"
+  mon_flux.open("/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile, std::ios::out); // Ouvre un fichier appelé name_file
   if (_Me==0)
   {
     std ::cout << "helloworld"<<std::endl;
