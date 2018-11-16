@@ -8,18 +8,12 @@ int main(int argc, char * argv[])
   int NbLignes, NbCol, rec;
   double Lx, Ly, Dt, tmax;
 
-  NbLignes = 3;
-  NbCol = 4;
-  rec = 4;
-  Lx = 1.;
-  Ly = 1.;
-  Dt = 0.1;
-  tmax = 5.;
-  
+  DataFile file(argv[1]);
+  file.ReadDataFile();
 
-  // Probleme Pb1(DataFile);
-  // Pb1.charge();
-  // Pb1.initializeMatrix();
+  Probleme Pb1(file);
+  Pb1.charge();
+  Pb1.initializeMatrix();
 
   MPI_Finalize();
   return 0;

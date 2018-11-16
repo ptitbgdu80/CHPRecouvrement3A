@@ -33,6 +33,7 @@ Probleme::Probleme(DataFile file)
     std::cout << "*******LA CONDTION DE BORD NE PERMET PAS*******" << std::endl;
     std::cout << "************DE RESOUDRE LE SYSTEME*************" << std::endl;
     std::cout << "***********************************************" << std::endl;
+    std::cout << "alpha = " << _alpha << ", beta = " << _beta << ", Dy = " << _Dy << std::endl;
     exit(1);
   }
 }

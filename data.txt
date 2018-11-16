@@ -1,10 +1,9 @@
 
 
 Conditions aux limites
+0. 1.
+#alpha beta
 #alpha du/dy + beta u (Dirichlet : alpha = 0, Neumann : beta = 0)
-Dirichlet 0. 1.
-#Dirichlet alpha, beta
-#Robin alpha beta
 
 choix
 stationnaire1
@@ -20,7 +19,7 @@ Nombre lignes
 Nombre colonnes
 100
 recouvrement
-6
+5
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y

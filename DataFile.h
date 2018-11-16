@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <mpi.h>
 
 // Définition de la classe
 
@@ -11,12 +12,9 @@ class DataFile {
 private:
   std::string _file_name;
   std::string _choix;
-  std::string _CL;
-  int _NbLignes, _NbCol, _rec;
+  int _NbLignes, _NbCol, _rec, _Me;
   double _Lx, _Ly, _Dt, _tmax, _alpha, _beta, _D;
 
-  bool _if_alpha;
-  bool _if_beta;
   bool _if_CL;
   bool _if_choix;
   bool _if_tmax;
@@ -33,7 +31,6 @@ public: // Méthodes et opérateurs de la classe
   void ReadDataFile();
   std::string Get_file_name() const {return _file_name;};
   std::string Get_choix() const {return _choix;};
-  std::string Get_conditions() const {return _CL;};
   double Get_tmax() const {return _tmax;};
   double Get_Dt() const {return _Dt;};
   double Get_Lx() const { return _Lx;};
