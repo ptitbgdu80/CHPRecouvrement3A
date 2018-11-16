@@ -35,12 +35,12 @@ void DataFile::ReadDataFile()
   {
     getline(data_file, file_line);
 
-    if (file_line.find("Conditions aux limites") != std::string::npos)
+    if (file_line.find("Conditions aux interfaces") != std::string::npos)
     {
       data_file >> _alpha >> _beta; _if_CL = true;
     }
 
-    if (file_line.find("choix") != std::string::npos)
+    if (file_line.find("Choix du terme source et des termes de bord") != std::string::npos)
     {
       data_file >> _choix; _if_choix = true;
     }
@@ -65,7 +65,7 @@ void DataFile::ReadDataFile()
       data_file >> _NbCol; _if_NbCol = true;
     }
 
-    if (file_line.find("recouvrement") != std::string::npos)
+    if (file_line.find("Recouvrement") != std::string::npos)
     {
       data_file >> _rec; _if_rec = true;
     }
@@ -171,8 +171,7 @@ void DataFile::ReadDataFile()
   if (_Me == 0)
   {
     cout << "-------------------------------------------------" << endl;
-    cout << "Fin de lecture du fichier " << _file_name << endl;
-    cout << "-------------------------------------------------" << endl;
+    cout << "Lecture du fichier " << _file_name << " terminée" endl;
   }
 }
 
