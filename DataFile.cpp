@@ -171,7 +171,7 @@ void DataFile::ReadDataFile()
   if (_Me == 0)
   {
     cout << "-------------------------------------------------" << endl;
-    cout << "Lecture du fichier " << _file_name << " terminée" endl;
+    cout << "Lecture du fichier " << _file_name << " terminée" << endl;
   }
 }
 
