@@ -6,7 +6,7 @@ run : main.cc fannyestlaplusjolie.cpp fannyestlaplusjolie.h DataFile.cpp DataFil
 
 #si on a des trucs a tester :
 test : test.cc
-	$(CC) test.cc  $(CXX_FLAGS) -o run_test
+	$(CC) -std=c++11 test.cc -o run_test
 
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)

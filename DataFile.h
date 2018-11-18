@@ -10,8 +10,7 @@
 
 class DataFile {
 private:
-  std::string _file_name;
-  std::string _choix;
+  std::string _file_name, _choix, _saveFolder;
   int _NbLignes, _NbCol, _rec, _Me;
   double _Lx, _Ly, _Dt, _tmax, _alpha, _beta, _D;
 
@@ -25,12 +24,14 @@ private:
   bool _if_NbCol;
   bool _if_NbLignes;
   bool _if_D;
+  bool _if_saveFolder;
 
 public: // Méthodes et opérateurs de la classe
   DataFile(std::string file_name);
   void ReadDataFile();
   std::string Get_file_name() const {return _file_name;};
   std::string Get_choix() const {return _choix;};
+  std::string Get_saveFolder() const {return _saveFolder;};
   double Get_tmax() const {return _tmax;};
   double Get_Dt() const {return _Dt;};
   double Get_Lx() const { return _Lx;};

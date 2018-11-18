@@ -84,6 +84,11 @@ void DataFile::ReadDataFile()
     {
       data_file >> _D; _if_D = true;
     }
+
+    if (file_line.find("Fichier de sauvegarde") != std::string::npos)
+    {
+      data_file >> _saveFolder; _if_saveFolder = true;
+    }
   }
 
   if (!_if_tmax)
@@ -177,11 +182,21 @@ void DataFile::ReadDataFile()
     }
     _NbLignes= 5;
   }
+  if (!_if_saveFolder)
+  {
+    if (_Me == 0)
+    {
+      cout << "-------------------------------------------------" << endl;
+      cout << "Attention - Le fichier de sauvegarde est ./Resultats par défaut" << endl;
+    }
+    _saveFolder = "./Resultats";
+  }
   if (_Me == 0)
   {
     cout << "-------------------------------------------------" << endl;
     cout << "Lecture du fichier " << _file_name << " terminée" << endl;
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 #define _DATA_FILE_CPP

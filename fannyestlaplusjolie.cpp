@@ -13,6 +13,7 @@ Probleme::Probleme(DataFile file)
   _alpha = file.Get_alpha();
   _beta = file.Get_beta();
   _D = file.Get_D();
+  _saveFolder = file.Get_saveFolder();
   MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
   MPI_Comm_size(MPI_COMM_WORLD, &_Np);
   _Dx = _Lx/(_NbCol+1);
@@ -22,6 +23,24 @@ Probleme::Probleme(DataFile file)
   _C3 = -_D/pow(_Dy,2);
   _CondBas.setZero(_NbCol);
   _CondHaut.setZero(_NbCol);
+
+  std::string temp = file.Get_choix();
+  if (temp == "stationnaire1")
+  {
+    _choix = stationnaire1;
+  }
+  else if (temp == "stationnaire2")
+  {
+    _choix = stationnaire2;
+  }
+  else if (temp == "instationnaire")
+  {
+    _choix = instationnaire;
+  }
+  else
+  {
+    _choix = 42;
+  }
 
 
   //Cette exception pose problème mais ça serait vraiment pas de bol...
@@ -75,14 +94,17 @@ void Probleme::charge()
 
   if (_Me < r)
   {
-    _i1 = (q+1)*_Me;
-    _iN = (q+1)*(_Me+1)-1;
+    _i1SansRec = (q+1)*_Me;
+    _iNSansRec = (q+1)*(_Me+1)-1;
   }
   else
   {
-    _i1 = q*_Me + r;
-    _iN = q*(_Me+1) + r - 1;
+    _i1SansRec = q*_Me + r;
+    _iNSansRec = q*(_Me+1) + r - 1;
   }
+
+  _i1 = _i1SansRec;
+  _iN = _iNSansRec;
 
   if (_Me != 0)
   {
@@ -92,8 +114,6 @@ void Probleme::charge()
   {
     _iN += recHaut;
   }
-
-  //std::cout << "Me:"<<  _Me <<"i1:" << _i1 << "iN:" << _iN <<std::endl;
 
   _Bp.setZero((_iN-_i1-1)*_NbCol);
   _Up.setZero((_iN-_i1-1)*_NbCol);
@@ -196,7 +216,7 @@ double Probleme::g(double x, double y)
 
     default:
     std::cout << "Problème avec la variable _choix" << std::endl;
-    abort();
+    exit(1);
   }
 }
 
@@ -228,7 +248,6 @@ void Probleme::calculB()
   {
     for (int nc = 1; nc < _NbCol+1; nc++)
     {
-
       //Cas général B = f + u^n/Dt
       _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Up[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
        if (nl == 1)
@@ -268,48 +287,46 @@ void Probleme::calculB()
 void Probleme::communication()
 {
   Eigen::VectorXd tempHaut, tempBas; //Dans ces vecteurs on stocke la valeur de la condition de bord alpha dU + beta U qu'on enverra en haut et en bas
-  tempBas.resize(_NbCol);
-  tempHaut.resize(_NbCol);
-  MPI_Request req1;
-  int recHaut = _rec/2;
-  int recBas = (_rec+1)/2;
-  if (_Me==0)
+  tempBas.setZero(_NbCol);
+  tempHaut.setZero(_NbCol);
 
   for (int nc = 0; nc < _NbCol; nc++)
   {
       // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
     if (_Me!=_Np-1)
     {
-      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-2-recBas)*_NbCol+nc] - _Up[(_iN-_i1-3-recBas)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
+      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec)*_NbCol+nc] - _Up[(_iN-_i1-_rec-1)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
     }
       // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
     if (_Me!=0)
     {
-      tempBas[nc] = (_alpha/_Dy)*(_Up[(recHaut+1)*_NbCol+nc] - _Up[(recHaut)*_NbCol+nc]) + _beta*_Up[(recHaut)*_NbCol+nc];
+      tempBas[nc] = (_alpha/_Dy)*(_Up[(_rec-1)*_NbCol+nc] - _Up[(_rec-2)*_NbCol+nc]) + _beta*_Up[(_rec-2)*_NbCol+nc];
     }
   }
+
+
   //Les procs pairs envoient puis reçoivent
   if (_Me%2 == 0)
   {
+
     if (_Me!=_Np-1)
     {
-      MPI_Isend(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD,&req1);
-      //std::cout << _Me << " comm1 " << std::endl;
+      MPI_Send(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me+1,10*_Me,MPI_COMM_WORLD);
     }
     if (_Me!=0)
     {
-      MPI_Isend(&tempBas[0],_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD,&req1);
+      MPI_Send(&tempBas[0],_NbCol,MPI_DOUBLE,_Me-1,100*_Me,MPI_COMM_WORLD);
       //std::cout << _Me << " comm1 " << std::endl;
     }
 
     if (_Me!=0)
     {
-      MPI_Irecv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &req1);
+      MPI_Recv(&_CondBas[0],_NbCol,MPI_DOUBLE,_Me-1,10*(_Me-1),MPI_COMM_WORLD, &_Status);
       //std::cout << _Me << " comm2 " << std::endl;
     }
     if (_Me!=_Np-1)
     {
-      MPI_Irecv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &req1);
+      MPI_Recv(&_CondHaut[0],_NbCol,MPI_DOUBLE,_Me+1,100*(_Me+1),MPI_COMM_WORLD, &_Status);
       //std::cout << _Me << " comm2 " << std::endl;
     }
   }
@@ -319,26 +336,26 @@ void Probleme::communication()
   {
     if (_Me!=0)
     {
-      MPI_Irecv(&_CondBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD, &req1);
-      //std::cout << _Me << " comm3 " << std::endl;
+      MPI_Recv(&_CondBas[0],_NbCol,MPI_DOUBLE,_Me-1,10*(_Me-1),MPI_COMM_WORLD, &_Status);
     }
     if (_Me!=_Np-1)
     {
-      MPI_Irecv(&_CondHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD, &req1);
+      MPI_Recv(&_CondHaut[0],_NbCol,MPI_DOUBLE,_Me+1,100*(_Me+1),MPI_COMM_WORLD, &_Status);
       //std::cout << _Me << " comm3 " << std::endl;
     }
 
     if (_Me!=_Np-1)
     {
-      MPI_Isend(&tempHaut,_NbCol,MPI_DOUBLE,_Me+1,100,MPI_COMM_WORLD,&req1);
+      MPI_Send(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me+1,10*_Me,MPI_COMM_WORLD);
       //std::cout << _Me << " comm4 " << std::endl;
     }
     if (_Me!=0)
     {
-      MPI_Isend(&tempBas,_NbCol,MPI_DOUBLE,_Me-1,100,MPI_COMM_WORLD,&req1);
+      MPI_Send(&tempBas[0],_NbCol,MPI_DOUBLE,_Me-1,100*_Me,MPI_COMM_WORLD);
       //std::cout << _Me << " comm4 " << std::endl;
     }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void Probleme::TimeIteration()
@@ -348,21 +365,24 @@ void Probleme::TimeIteration()
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Boucle temporelle de résolution du problème" << std::endl;
   }
- _t=0.;
+  _t=0.;
+  system("mkdir -p ./Resultats");
   while (_t<=_tmax)
   {
+    Save();
     communication();
-      calculB();
-    //  std::cout << _Me << " lol1" << std::endl;
-     _Up=_solver.solve(_Bp);
-      //std::cout << _Me << "lo000000000000000000000000000000l2" << std::endl;
-      Rename();
-      Save();
-      _t=_t +_Dt;
+    calculB();
+    _Up=_solver.solve(_Bp);
+    _t += _Dt;
+  }
+  if (_Me == 0)
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Résolution effectuée avec succès" << std::endl;
   }
 }
 
-void Probleme::Rename()
+void Probleme::Save()
 {
   std::string tn;
   int a,b,c;
@@ -370,46 +390,58 @@ void Probleme::Rename()
   b =(_Me - 100*a)/10;
   c = _Me - 100*a -10*b;
   tn = std::to_string(a) + std::to_string(b) + std::to_string(c);
-  _savefile = "sol" + tn + "t" + std::to_string(_t) + ".dat";
-}
+  std::string savefile = "t" + std::to_string(_t) + "p" + tn + ".dat";
 
-void Probleme::Save()
-{
-  int recHaut = _rec/2;
-  int recBas = (_rec+1)/2;
-  system(("mkdir -p ./" + std::to_string(_t)).c_str());
-//  std::string path="/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile;
   std::ofstream mon_flux ; // Contruit un objet "ofstream"
-  mon_flux.open("/home/fkuhn/Documents/projetheloise/CHPRecouvrement3A/"+ std::to_string(_t)+ "/" + _savefile, std::ios::out); // Ouvre un fichier appelé name_file
-  if (_Me==0)
+  mon_flux.open( _saveFolder + "/" + savefile, std::ios::out); // Ouvre un fichier appelé name_file
+  if (_Me==0 && _Me==_Np-1)
   {
-    std ::cout << "helloworld"<<std::endl;
-    for (int i=_i1; i<_iN-_i1-recHaut-2; i++)
+    //On ne prend ni la ligne 0 ni la ligne iN
+    for (int nl=1; nl < _iNSansRec; nl++)
     {
-      for(int j=0; j<_NbCol; j++)
+      for (int nc = 1; nc < _NbCol+1; nc++)
       {
-        mon_flux << j*_Dx << " " << i*_Dy << " " << _Up[i*_NbCol+j] << std::endl;
+        //Le premier élément de Up à prendre est celui d'indice 0
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-1)*_NbCol+nc-1] << std::endl;
+      }
+    }
+  }
+  else if (_Me==0)
+  {
+    //On ne prend pas la ligne 0 (bord bas du domaine), on prend cependant la ligne iNSansRec
+    // std::cout << "iNSansRec = " << _iNSansRec << std::endl;
+    for (int nl=1; nl < _iNSansRec+1; nl++)
+    {
+      for(int nc = 1; nc < _NbCol+1; nc++)
+      {
+        // std::cout << nl << " " << nc << std::endl;
+        //Le premier élément de Up à prendre est celui d'indice 0
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-1)*_NbCol+nc-1] << std::endl;
       }
     }
   }
   else if (_Me== _Np-1)
   {
-    std ::cout << "hello"<<std::endl;
-    for (int i=recBas-1; i<_iN; i++)
+    //On ne prend pas la dernière ligne (iNSansRec = iN correspond au bord haut du domaine), on prend la ligne i1SansRec
+    for (int nl = _i1SansRec; nl < _iNSansRec; nl++)
     {
-      for(int j=0; j<_NbCol; j++)
+      for(int nc = 1; nc < _NbCol+1; nc++)
       {
-        mon_flux << j*_Dx << " " << (_i1+i+1)*_Dy << " " << _Up[i*_NbCol+j] << std::endl;
+        //Le premier élément de Up à prendre est celui d'indice (i1SansRec - i1 - 1)*NbCol
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1-1)*_NbCol + nc-1] << std::endl;
       }
     }
   }
   else
   {
-    for (int i=recBas-1; i<_iN-_i1-recHaut-2; i++)
+
+    //On prend les deux lignes i1SansRec et iNSansRec
+    for (int nl = _i1SansRec; nl < _iNSansRec+1; nl++)
     {
-      for(int j=0; j<_NbCol; j++)
+      for(int nc = 1; nc < _NbCol+1; nc++)
       {
-        mon_flux << j*_Dx << " " << (_i1+i+1)*_Dy << " " << _Up[i*_NbCol+j] << std::endl;
+        //Le premier élément de Up à prendre est celui d'indice (i1SansRec - i1 - 1)*NbCol
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1-1)*_NbCol + nc-1] << std::endl;
       }
     }
   }
