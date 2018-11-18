@@ -295,7 +295,7 @@ void Probleme::communication()
       // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
     if (_Me!=_Np-1)
     {
-      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec)*_NbCol+nc] - _Up[(_iN-_i1-_rec-1)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
+      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec+1)*_NbCol+nc] - _Up[(_iN-_i1-_rec)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec+1)*_NbCol+nc];
     }
       // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
     if (_Me!=0)
