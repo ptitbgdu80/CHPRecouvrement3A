@@ -14,6 +14,8 @@ int main(int argc, char * argv[])
 
   Pb1.TimeIteration();
 
+  Pb1.PostProcessing();
+
   MPI_Finalize();
 
   return 0;

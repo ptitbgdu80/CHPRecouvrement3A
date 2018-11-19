@@ -10,15 +10,15 @@ stationnaire1
 #stationnaire1, stationnaire2 ou instationnaire
 
 tmax
-1.0
+10.0
 Dt
-0.1
+0.05
 Nombre de lignes
-10
+50
 Nombre de colonnes
-10
+50
 Recouvrement
-3
+5
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y

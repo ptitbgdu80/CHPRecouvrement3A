@@ -42,37 +42,29 @@ void DataFile::ReadDataFile()
 
     if (file_line.find("Choix du terme source et des termes de bord") != std::string::npos)
     {
-      //Création d'une exception car si le choix n'est pas dans la liste des possibilité ça crash
-      //(Parce que la variable choix est un int et que les 3 possibilités sont énumérées dans le .h)
-      try
+      string temp;
+      data_file >> temp;
+      if (temp == "stationnaire1")
       {
-        data_file >> _choix; _if_choix = true;
+        _choix = stationnaire1;
+        _if_choix = true;
       }
-      catch (...)
+      else if (temp == "stationnaire2")
       {
-        if (_Me==0)
-        {
-          cout << "Choix du terme source et des termes de bord incorrect" << endl;
-        }
+        _choix = stationnaire2;
+        _if_choix = true;
+      }
+      else if (temp == "stationnaire2")
+      {
+        _choix = instationnaire;
+        _if_choix = true;
+      }
+      else
+      {
+        cout << "Choix du terme source et des termes de bord incorrect" << endl;
       }
     }
 
-    if (file_line.find("Format de sortie") != std::string::npos)
-    {
-      //Création d'une exception car si le format n'est pas dans la liste des possibilité ça crash
-      //(Parce que la variable format est un int et que les 3 possibilités sont énumérées dans le .h)
-      try
-      {
-        data_file >> _formatSortie; _if_formatSortie = true;
-      }
-      catch (...)
-      {
-        if (_Me==0)
-        {
-          cout << "Choix du format de sortie incorrect" << endl;
-        }
-      }
-    }
 
     if (file_line.find("Dt") != std::string::npos)
     {
@@ -118,11 +110,36 @@ void DataFile::ReadDataFile()
     {
       data_file >> _saveFolder; _if_saveFolder = true;
     }
-
     if (file_line.find("Format de sortie") != std::string::npos)
     {
-      data_file >> _formatSortie; _if_formatSortie = true;
+      string tempo;
+      data_file >> tempo;
+
+      if (tempo == "Paraview")
+      {
+        _formatSortie = Paraview;
+        _if_formatSortie = true;
+      }
+      else if (tempo == "Gnuplot")
+      {
+        _formatSortie = Gnuplot;
+        _if_formatSortie = true;
+      }
+      else if (tempo == "ParaviewEtGnuplot")
+      {
+        _formatSortie = ParaviewEtGnuplot;
+        _if_formatSortie = true;
+      }
+      else
+      {
+        cout << "Choix du format de sortie incorrect" << endl;
+      }
     }
+
+    // if (file_line.find("Format de sortie") != std::string::npos)
+    // {
+    //   data_file >> _formatSortie; _if_formatSortie = true;
+    // }
   }
 
   if (!_if_tmax)

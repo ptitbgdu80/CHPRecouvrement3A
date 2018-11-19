@@ -15,6 +15,7 @@ Probleme::Probleme(DataFile file)
   _D = file.Get_D();
   _saveFolder = file.Get_saveFolder();
   _choix = file.Get_choix();
+  _formatSortie = file.Get_formatSortie();
   MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
   MPI_Comm_size(MPI_COMM_WORLD, &_Np);
   _Dx = _Lx/(_NbCol+1);
@@ -348,7 +349,11 @@ void Probleme::TimeIteration()
     std::cout << "Boucle temporelle de résolution du problème" << std::endl;
   }
   _t=0.;
-  system(("mkdir -p " + _saveFolder).c_str());
+  if (_Me == 0)
+  {
+    system(("mkdir -p " + _saveFolder).c_str());
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
   while (_t<=_tmax)
   {
     SaveIteration();
@@ -366,13 +371,12 @@ void Probleme::TimeIteration()
 
 void Probleme::SaveIteration()
 {
-  std::string tn;
   int a,b,c;
   a = _Me/100;
   b =(_Me - 100*a)/10;
   c = _Me - 100*a -10*b;
-  tn = std::to_string(a) + std::to_string(b) + std::to_string(c);
-  std::string savefile = "t" + std::to_string(_t) + "p" + tn + ".dat";
+  std::string procID = std::to_string(a) + std::to_string(b) + std::to_string(c);
+  std::string savefile = "t" + std::to_string(_t) + "p" + procID + ".dat";
 
   std::ofstream mon_flux ; // Contruit un objet "ofstream"
   mon_flux.open( _saveFolder + "/" + savefile, std::ios::out); // Ouvre un fichier appelé name_file
@@ -430,42 +434,93 @@ void Probleme::SaveIteration()
   mon_flux.close();
 }
 
-// void Probleme::PostProcessing()
-// {
-//   switch (_formatSortie)
-//   {
-//     case Paraview:
-//     CreationVtk();
-//     break;
-//
-//     // case Gnuplot:
-//     //
-//     // break;
-//
-//     // case ParaviewEtGnuplot:
-//     // CreationVtk();
-//     //
-//     // break;
-//
-//     default:
-//     std::cout << "Problème avec le format de sortie" << std::endl;
-//     exit(1)
-//   }
-//   system(("rm -Rf " + _saveFolder).c_str())
-// }
+void Probleme::PostProcessing()
+{
+  switch (_formatSortie)
+  {
+    case Paraview:
+    CreationVtk();
+    break;
 
-// void Probleme::CreationVtk()
-// {
-//   system("mkdir -p " + _saveFolder + "Paraview");
-//   mon_flux.open(_saveFolder + "Paraview/t_" + std::to_string(_t), std::ios::out); // Ouvre un fichier appelé name_file
-//   mon_flux<<"# vtk DataFile Version 3.0\n"
-//   <<"cell\n"
-//   <<"ASCII\n"
-//   <<"DATASET STRUCTURED_POINTS\n"
-//   <<"DIMENSIONS "<< _numCols <<" "<<_numLines<<" 1\n"
-//   <<"ORIGIN 0 0 0\n"
-//   <<"SPACING 1.0 1.0 1.0\n"
-//   <<"POINT_DATA "<<_numCols*_numLines<<"\n"
-//   <<"SCALARS cell float\n"
-//   <<"LOOKUP_TABLE default\n";
-// }
+    // case Gnuplot:
+    //
+    // break;
+
+    // case ParaviewEtGnuplot:
+    // CreationVtk();
+    //
+    // break;
+
+    default:
+    std::cout << "Problème avec le format de sortie" << std::endl;
+    exit(1);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (_Me==0)
+  {
+    system(("rm -rf " + _saveFolder).c_str());
+  }
+}
+
+void Probleme::CreationVtk()
+{
+  if (_Me == 0)
+  {
+    system(("rm -rf " + _saveFolder + "Paraview").c_str());
+    system(("mkdir -p " + _saveFolder + "Paraview").c_str());
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  //permet de démarrer avec un _t "multiple" de _Dt
+  double tmin = floor(_Me*_tmax/_Np*_Dt)/_Dt;
+  double tmax = floor((_Me+1)*_tmax/_Np*_Dt)/_Dt;
+  if (_Me == _Np-1)
+  {
+    tmax = _tmax;
+  }
+  for (_t = tmin; _t < tmax; _t += _Dt)
+  {
+    int it = floor(_t/_Dt);
+    std::ofstream mon_flux;
+    mon_flux.open(_saveFolder + "Paraview/it" + std::to_string(it) + ".vtk", std::ios::out);
+    mon_flux << "# vtk DataFile Version 3.0\n"
+    <<"cell\n"
+    <<"ASCII\n"
+    <<"DATASET STRUCTURED_POINTS\n"
+    <<"DIMENSIONS " << _NbCol << " " << _NbLignes << " 1\n"
+    <<"ORIGIN 0 0 0\n"
+    <<"SPACING 1.0 1.0 1.0\n"
+    <<"POINT_DATA " << _NbCol*_NbLignes << "\n"
+    <<"SCALARS cell float\n"
+    <<"LOOKUP_TABLE default";
+
+    for (int i = 0; i < _Np; i++)
+    {
+      int a,b,c;
+      a = i/100;
+      b =(i - 100*a)/10;
+      c = i - 100*a -10*b;
+      std::string procID = std::to_string(a) + std::to_string(b) + std::to_string(c);
+      std::string savefile = "t" + std::to_string(_t) + "p" + procID + ".dat";
+      std::ifstream fichier(_saveFolder + "/" + savefile);
+
+      std::string x, y, newy, valeur;
+      fichier >> x >> newy >> valeur;
+      y = "";
+
+      while (!fichier.eof())
+      {
+        if (newy == y)
+        {
+          mon_flux << valeur << " ";
+        }
+        else
+        {
+          mon_flux << std::endl << valeur << " ";
+        }
+        y = newy;
+        fichier >> x >> newy >> valeur;
+      }
+    }
+    mon_flux.close();
+  }
+}

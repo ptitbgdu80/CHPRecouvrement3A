@@ -20,9 +20,11 @@ private:
   int _NbLignes, _NbCol, _Np, _Me, _rec, _i1, _iN, _i1SansRec, _iNSansRec;
   int _choix;
   enum {stationnaire1, stationnaire2, instationnaire};
+  int _formatSortie;
+  enum {Paraview, Gnuplot, ParaviewEtGnuplot};
   double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3, _t;
   MPI_Status _Status;
-  std::string _saveFolder, _formatSortie;
+  std::string _saveFolder;
 public:
   Probleme(DataFile file);
 
@@ -46,7 +48,7 @@ public:
 
   void TimeIteration();
 
-  // void PostProcessing();
+  void PostProcessing();
 
-  // void CreationVtk();
+  void CreationVtk();
 };
