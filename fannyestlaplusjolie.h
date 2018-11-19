@@ -22,7 +22,7 @@ private:
   enum {stationnaire1, stationnaire2, instationnaire};
   double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3, _t;
   MPI_Status _Status;
-  std::string _saveFolder;
+  std::string _saveFolder, _formatSortie;
 public:
   Probleme(DataFile file);
 
@@ -42,7 +42,11 @@ public:
 
   void communication();
 
-  void Save();
+  void SaveIteration();
 
   void TimeIteration();
+
+  // void PostProcessing();
+
+  // void CreationVtk();
 };

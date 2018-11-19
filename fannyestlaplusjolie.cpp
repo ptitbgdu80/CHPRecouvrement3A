@@ -14,6 +14,7 @@ Probleme::Probleme(DataFile file)
   _beta = file.Get_beta();
   _D = file.Get_D();
   _saveFolder = file.Get_saveFolder();
+  _choix = file.Get_choix();
   MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
   MPI_Comm_size(MPI_COMM_WORLD, &_Np);
   _Dx = _Lx/(_NbCol+1);
@@ -23,25 +24,6 @@ Probleme::Probleme(DataFile file)
   _C3 = -_D/pow(_Dy,2);
   _CondBas.setZero(_NbCol);
   _CondHaut.setZero(_NbCol);
-
-  std::string temp = file.Get_choix();
-  if (temp == "stationnaire1")
-  {
-    _choix = stationnaire1;
-  }
-  else if (temp == "stationnaire2")
-  {
-    _choix = stationnaire2;
-  }
-  else if (temp == "instationnaire")
-  {
-    _choix = instationnaire;
-  }
-  else
-  {
-    _choix = 42;
-  }
-
 
   //Cette exception pose problème mais ça serait vraiment pas de bol...
   //Quand on essaye d'exprimer u_(i-1) en fonction de u_i avec la CL ça fait disparaître u_(i-1)
@@ -366,10 +348,10 @@ void Probleme::TimeIteration()
     std::cout << "Boucle temporelle de résolution du problème" << std::endl;
   }
   _t=0.;
-  system("mkdir -p ./Resultats");
+  system(("mkdir -p " + _saveFolder).c_str());
   while (_t<=_tmax)
   {
-    Save();
+    SaveIteration();
     communication();
     calculB();
     _Up=_solver.solve(_Bp);
@@ -382,7 +364,7 @@ void Probleme::TimeIteration()
   }
 }
 
-void Probleme::Save()
+void Probleme::SaveIteration()
 {
   std::string tn;
   int a,b,c;
@@ -448,9 +430,34 @@ void Probleme::Save()
   mon_flux.close();
 }
 
-// void Probleme::vtk()
+// void Probleme::PostProcessing()
 // {
-//   mon_flux.open(name_file, std::ios::out); // Ouvre un fichier appelé name_file
+//   switch (_formatSortie)
+//   {
+//     case Paraview:
+//     CreationVtk();
+//     break;
+//
+//     // case Gnuplot:
+//     //
+//     // break;
+//
+//     // case ParaviewEtGnuplot:
+//     // CreationVtk();
+//     //
+//     // break;
+//
+//     default:
+//     std::cout << "Problème avec le format de sortie" << std::endl;
+//     exit(1)
+//   }
+//   system(("rm -Rf " + _saveFolder).c_str())
+// }
+
+// void Probleme::CreationVtk()
+// {
+//   system("mkdir -p " + _saveFolder + "Paraview");
+//   mon_flux.open(_saveFolder + "Paraview/t_" + std::to_string(_t), std::ios::out); // Ouvre un fichier appelé name_file
 //   mon_flux<<"# vtk DataFile Version 3.0\n"
 //   <<"cell\n"
 //   <<"ASCII\n"

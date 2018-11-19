@@ -5,8 +5,8 @@
 using namespace std;
 
 DataFile::DataFile(std::string file_name)
-: _file_name(file_name), _if_CL(false), _if_choix(false), _if_tmax(false), _if_Dt(false),
-_if_Lx(false), _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_D(false)
+: _file_name(file_name), _if_CL(false), _if_choix(false), _if_tmax(false), _if_Dt(false), _if_Lx(false),
+ _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_D(false), _if_saveFolder(false), _if_formatSortie(false)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
 }
@@ -42,7 +42,36 @@ void DataFile::ReadDataFile()
 
     if (file_line.find("Choix du terme source et des termes de bord") != std::string::npos)
     {
-      data_file >> _choix; _if_choix = true;
+      //Création d'une exception car si le choix n'est pas dans la liste des possibilité ça crash
+      //(Parce que la variable choix est un int et que les 3 possibilités sont énumérées dans le .h)
+      try
+      {
+        data_file >> _choix; _if_choix = true;
+      }
+      catch (...)
+      {
+        if (_Me==0)
+        {
+          cout << "Choix du terme source et des termes de bord incorrect" << endl;
+        }
+      }
+    }
+
+    if (file_line.find("Format de sortie") != std::string::npos)
+    {
+      //Création d'une exception car si le format n'est pas dans la liste des possibilité ça crash
+      //(Parce que la variable format est un int et que les 3 possibilités sont énumérées dans le .h)
+      try
+      {
+        data_file >> _formatSortie; _if_formatSortie = true;
+      }
+      catch (...)
+      {
+        if (_Me==0)
+        {
+          cout << "Choix du format de sortie incorrect" << endl;
+        }
+      }
     }
 
     if (file_line.find("Dt") != std::string::npos)
@@ -55,12 +84,12 @@ void DataFile::ReadDataFile()
       data_file >> _tmax; _if_tmax = true;
     }
 
-    if (file_line.find("Nombre lignes") != std::string::npos)
+    if (file_line.find("Nombre de lignes") != std::string::npos)
     {
       data_file >> _NbLignes; _if_NbLignes = true;
     }
 
-    if (file_line.find("Nombre colonnes") != std::string::npos)
+    if (file_line.find("Nombre de colonnes") != std::string::npos)
     {
       data_file >> _NbCol; _if_NbCol = true;
     }
@@ -88,6 +117,11 @@ void DataFile::ReadDataFile()
     if (file_line.find("Fichier de sauvegarde") != std::string::npos)
     {
       data_file >> _saveFolder; _if_saveFolder = true;
+    }
+
+    if (file_line.find("Format de sortie") != std::string::npos)
+    {
+      data_file >> _formatSortie; _if_formatSortie = true;
     }
   }
 
@@ -125,7 +159,7 @@ void DataFile::ReadDataFile()
       cout << "-------------------------------------------------" << endl;
       cout << "Attention - Le terme source est défini à stationnaire1 par défaut" << endl;
     }
-    _choix = "stationnaire1";
+    _choix = stationnaire1;
   }
   if (!_if_CL)
   {
@@ -190,6 +224,15 @@ void DataFile::ReadDataFile()
       cout << "Attention - Le fichier de sauvegarde est ./Resultats par défaut" << endl;
     }
     _saveFolder = "./Resultats";
+  }
+  if (!_if_formatSortie)
+  {
+    if (_Me == 0)
+    {
+      cout << "-------------------------------------------------" << endl;
+      cout << "Attention - Le format de sortie est Paraview par défaut" << endl;
+    }
+    _formatSortie = Paraview;
   }
   if (_Me == 0)
   {

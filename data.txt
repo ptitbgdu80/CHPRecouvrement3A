@@ -13,9 +13,9 @@ tmax
 1.0
 Dt
 0.1
-Nombre lignes
+Nombre de lignes
 10
-Nombre colonnes
+Nombre de colonnes
 10
 Recouvrement
 3
@@ -28,3 +28,8 @@ Coefficient de diffusion D
 
 Fichier de sauvegarde
 ./Resultats
+#bien mettre le chemin du dossier de sauvegarde
+
+Format de sortie
+Paraview
+#Paraview, Gnuplot, ParaviewEtGnuplot
