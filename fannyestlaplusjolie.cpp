@@ -436,6 +436,11 @@ void Probleme::SaveIteration()
 
 void Probleme::PostProcessing()
 {
+  if (_Me == 0)
+  {
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Début du postprocessing" << std::endl;
+  }
   switch (_formatSortie)
   {
     case Paraview:
@@ -459,7 +464,10 @@ void Probleme::PostProcessing()
   if (_Me==0)
   {
     system(("rm -rf " + _saveFolder).c_str());
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Fin du postprocessing" << std::endl;
   }
+
 }
 
 void Probleme::CreationVtk()
@@ -470,16 +478,21 @@ void Probleme::CreationVtk()
     system(("mkdir -p " + _saveFolder + "Paraview").c_str());
   }
   MPI_Barrier(MPI_COMM_WORLD);
+
   //permet de démarrer avec un _t "multiple" de _Dt
-  double tmin = floor(_Me*_tmax/_Np*_Dt)/_Dt;
-  double tmax = floor((_Me+1)*_tmax/_Np*_Dt)/_Dt;
+  double tmin = floor(_Me*_tmax/(_Np*_Dt))*_Dt;
+  double tmax = floor((_Me+1)*_tmax/(_Np*_Dt))*_Dt;
+
   if (_Me == _Np-1)
   {
     tmax = _tmax;
   }
+
   for (_t = tmin; _t < tmax; _t += _Dt)
   {
-    int it = floor(_t/_Dt);
+    //+0.1 pour éviter les erreurs d'arrondis, sachant que t/Dt est censé être entier
+    int it = floor(_t/_Dt+0.1);
+
     std::ofstream mon_flux;
     mon_flux.open(_saveFolder + "Paraview/it" + std::to_string(it) + ".vtk", std::ios::out);
     mon_flux << "# vtk DataFile Version 3.0\n"
