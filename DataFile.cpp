@@ -54,7 +54,7 @@ void DataFile::ReadDataFile()
         _choix = stationnaire2;
         _if_choix = true;
       }
-      else if (temp == "stationnaire2")
+      else if (temp == "instationnaire")
       {
         _choix = instationnaire;
         _if_choix = true;
