@@ -279,7 +279,7 @@ void Probleme::communication()
       // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
     if (_Me!=_Np-1)
     {
-      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec+1)*_NbCol+nc] - _Up[(_iN-_i1-_rec)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec+1)*_NbCol+nc];
+      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec)*_NbCol+nc] - _Up[(_iN-_i1-_rec-1)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
     }
       // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
     if (_Me!=0)
@@ -346,7 +346,6 @@ void Probleme::TimeIteration()
 {
   Eigen::VectorXd Up_Avant;
   double erreurloc,erreur;
-  erreur=1.;
 
   if (_Me == 0)
   {
@@ -362,7 +361,9 @@ void Probleme::TimeIteration()
   while (_t<=_tmax)
   {
     SaveIteration();
-    while(erreur>_Epsilon)
+    _t += _Dt;
+    erreur = _Epsilon+1.;
+    while(erreur > _Epsilon)
     {
       communication();
       calculB();
@@ -375,7 +376,7 @@ void Probleme::TimeIteration()
         std::cout << erreur <<std::endl;
       }
     }
-    _t += _Dt;
+    std::cout << "_t = " << _t << std::endl;
   }
   if (_Me == 0)
   {
@@ -498,10 +499,10 @@ void Probleme::CreationVtk()
   //permet de démarrer avec un _t "multiple" de _Dt
   double tmin = floor(_Me*_tmax/(_Np*_Dt))*_Dt;
   double tmax = floor((_Me+1)*_tmax/(_Np*_Dt))*_Dt;
-
+  std::cout << tmin << " " << tmax << std::endl;
   if (_Me == _Np-1)
   {
-    tmax = _tmax;
+    tmax = _tmax + _Dt/2;
   }
 
   for (_t = tmin; _t < tmax; _t += _Dt)
@@ -517,7 +518,7 @@ void Probleme::CreationVtk()
     <<"DATASET STRUCTURED_POINTS\n"
     <<"DIMENSIONS " << _NbCol << " " << _NbLignes << " 1\n"
     <<"ORIGIN 0 0 0\n"
-    <<"SPACING 1.0 1.0 1.0\n"
+    <<"SPACING  " << _Dx << " " << _Dy <<  "1.0\n"
     <<"POINT_DATA " << _NbCol*_NbLignes << "\n"
     <<"SCALARS cell float\n"
     <<"LOOKUP_TABLE default";

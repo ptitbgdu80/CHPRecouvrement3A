@@ -6,19 +6,19 @@ Conditions aux interfaces
 #CL = alpha du/dy + beta u    -     (Dirichlet : alpha = 0, Neumann : beta = 0)
 
 Choix du terme source et des termes de bord
-stationnaire1
+instationnaire
 #stationnaire1, stationnaire2 ou instationnaire
 
 tmax
-1.
+10.
 Dt
-1.
+0.2
 Nombre de lignes
-100
+200
 Nombre de colonnes
-100
+200
 Recouvrement
-10
+6
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y
@@ -27,7 +27,7 @@ Coefficient de diffusion D
 1.
 
 Fichier de sauvegarde
-./Stationnaire
+./Instationnaire
 #bien mettre le chemin du dossier de sauvegarde
 
 Format de sortie
@@ -35,4 +35,4 @@ Paraview
 #Paraview, Gnuplot, ParaviewEtGnuplot
 
 Tolerance Schwarz
-0.001
+0.1
