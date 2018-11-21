@@ -13,6 +13,7 @@ Probleme::Probleme(DataFile file)
   _alpha = file.Get_alpha();
   _beta = file.Get_beta();
   _D = file.Get_D();
+  _Epsilon = file.Get_Epsilon();
   _saveFolder = file.Get_saveFolder();
   _choix = file.Get_choix();
   _formatSortie = file.Get_formatSortie();
@@ -343,6 +344,10 @@ void Probleme::communication()
 
 void Probleme::TimeIteration()
 {
+  Eigen::VectorXd Up_Avant;
+  double erreurloc,erreur;
+  erreur=1.;
+
   if (_Me == 0)
   {
     std::cout << "-------------------------------------------------" << std::endl;
@@ -357,9 +362,19 @@ void Probleme::TimeIteration()
   while (_t<=_tmax)
   {
     SaveIteration();
-    communication();
-    calculB();
-    _Up=_solver.solve(_Bp);
+    while(erreur>_Epsilon)
+    {
+      communication();
+      calculB();
+      Up_Avant=_Up;
+      _Up=_solver.solve(_Bp);
+      erreurloc=(_Up-Up_Avant).norm();
+      MPI_Allreduce(&erreurloc,&erreur,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+      if(_Me==0)
+      {
+        std::cout << erreur <<std::endl;
+      }
+    }
     _t += _Dt;
   }
   if (_Me == 0)
@@ -367,6 +382,7 @@ void Probleme::TimeIteration()
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Résolution effectuée avec succès" << std::endl;
   }
+  SaveIteration();
 }
 
 void Probleme::SaveIteration()

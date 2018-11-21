@@ -18,7 +18,7 @@ private:
   int _formatSortie;
   enum{Paraview, Gnuplot, ParaviewEtGnuplot};
 
-  double _Lx, _Ly, _Dt, _tmax, _alpha, _beta, _D;
+  double _Lx, _Ly, _Dt, _tmax, _alpha, _beta, _D, _Epsilon;
 
   bool _if_CL;
   bool _if_choix;
@@ -32,6 +32,7 @@ private:
   bool _if_D;
   bool _if_saveFolder;
   bool _if_formatSortie;
+  bool _if_Epsilon;
 
 public: // Méthodes et opérateurs de la classe
   DataFile(std::string file_name);
@@ -50,6 +51,7 @@ public: // Méthodes et opérateurs de la classe
   int Get_NbLignes() const { return _NbLignes;};
   int Get_NbCol() const { return _NbCol;};
   int Get_rec() const { return _rec;};
+  double Get_Epsilon() const {return _Epsilon;};
 
 };
 

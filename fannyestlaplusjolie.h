@@ -22,7 +22,7 @@ private:
   enum {stationnaire1, stationnaire2, instationnaire};
   int _formatSortie;
   enum {Paraview, Gnuplot, ParaviewEtGnuplot};
-  double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3, _t;
+  double _Lx, _Ly, _Dx, _Dy, _Dt, _D, _tmax, _alpha, _beta, _C1, _C2, _C3, _t,_Epsilon;
   MPI_Status _Status;
   std::string _saveFolder;
 public:

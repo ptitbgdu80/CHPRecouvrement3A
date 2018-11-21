@@ -6,7 +6,8 @@ using namespace std;
 
 DataFile::DataFile(std::string file_name)
 : _file_name(file_name), _if_CL(false), _if_choix(false), _if_tmax(false), _if_Dt(false), _if_Lx(false),
- _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_D(false), _if_saveFolder(false), _if_formatSortie(false)
+ _if_Ly(false), _if_rec(false), _if_NbCol(false), _if_NbLignes(false), _if_D(false), _if_saveFolder(false),
+  _if_formatSortie(false), _if_Epsilon(false)
 {
     MPI_Comm_rank(MPI_COMM_WORLD, &_Me);
 }
@@ -135,7 +136,10 @@ void DataFile::ReadDataFile()
         cout << "Choix du format de sortie incorrect" << endl;
       }
     }
-
+    if (file_line.find("Tolerance Schwarz") != std::string::npos)
+    {
+      data_file >> _Epsilon; _if_Epsilon = true;
+    }
     // if (file_line.find("Format de sortie") != std::string::npos)
     // {
     //   data_file >> _formatSortie; _if_formatSortie = true;
@@ -250,6 +254,15 @@ void DataFile::ReadDataFile()
       cout << "Attention - Le format de sortie est Paraview par défaut" << endl;
     }
     _formatSortie = Paraview;
+  }
+  if (!_if_Epsilon)
+  {
+    if (_Me == 0)
+    {
+      cout << "-------------------------------------------------" << endl;
+      cout << "Attention - la tolérance de l'algorithme de Schwarz est définie à E-3" << endl;
+    }
+    _Epsilon=0.001;
   }
   if (_Me == 0)
   {
