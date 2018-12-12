@@ -21,7 +21,14 @@ Probleme::Probleme(DataFile file)
   MPI_Comm_size(MPI_COMM_WORLD, &_Np);
   _Dx = _Lx/(_NbCol+1);
   _Dy = _Ly/(_NbLignes+1);
-  _C1 = 1./_Dt + 2.*_D*(1./pow(_Dx,2)+1./pow(_Dy,2));
+  if (_choix==stationnaire1 || _choix==stationnaire2)
+  {
+      _C1 = 2.*_D*(1./pow(_Dx,2)+1./pow(_Dy,2));
+  }
+  else
+  {
+      _C1 = 1./_Dt + 2.*_D*(1./pow(_Dx,2)+1./pow(_Dy,2));
+  }
   _C2 = -_D/pow(_Dx,2);
   _C3 = -_D/pow(_Dy,2);
   _CondBas.setZero(_NbCol);
@@ -233,7 +240,14 @@ void Probleme::calculB()
     for (int nc = 1; nc < _NbCol+1; nc++)
     {
       //Cas général B = f + u^n/Dt
-      _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Up[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
+      if(_choix==stationnaire1 || _choix==stationnaire2)
+      {
+        _Bp[(nl-_i1-1)*_NbCol + nc-1] = f(nc*_Dx,nl*_Dy,_t);
+      }
+      else
+      {
+        _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Up[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
+      }
        if (nl == 1)
        {
          _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,0)/pow(_Dy,2);

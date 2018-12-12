@@ -12,13 +12,13 @@ stationnaire1
 tmax
 1.
 Dt
-1.1
+10.
 Nombre de lignes
-100
+50
 Nombre de colonnes
-100
+50
 Recouvrement
-3
+5
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y
@@ -27,7 +27,7 @@ Coefficient de diffusion D
 1.
 
 Fichier de sauvegarde
-./Stationnaire1
+./Stationnaire
 #bien mettre le chemin du dossier de sauvegarde
 
 Format de sortie
