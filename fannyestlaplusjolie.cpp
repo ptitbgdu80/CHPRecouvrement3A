@@ -360,6 +360,7 @@ void Probleme::TimeIteration()
 {
   Eigen::VectorXd Up_Avant;
   double erreurloc,erreur;
+  int iter=0;
 
   if (_Me == 0)
   {
@@ -372,13 +373,15 @@ void Probleme::TimeIteration()
     system(("mkdir -p " + _saveFolder).c_str());
   }
   MPI_Barrier(MPI_COMM_WORLD);
-  while (_t<=_tmax)
+  while (_t<_tmax)
   {
+    iter=0.;
     SaveIteration();
     _t += _Dt;
     erreur = _Epsilon+1.;
     while(erreur > _Epsilon)
     {
+      iter=iter+1;
       communication();
       calculB();
       Up_Avant=_Up;
@@ -398,6 +401,7 @@ void Probleme::TimeIteration()
     std::cout << "Résolution effectuée avec succès" << std::endl;
   }
   SaveIteration();
+  std::cout << "iter =" << iter << std::endl;
 }
 
 void Probleme::SaveIteration()

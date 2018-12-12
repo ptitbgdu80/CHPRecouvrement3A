@@ -16,15 +16,22 @@ int main(int argc, char * argv[])
   Probleme Pb1(file);
   Pb1.charge();
   Pb1.initializeSolver();
-
-  Pb1.TimeIteration();
-
   tend=MPI_Wtime();
   t_total=tend-tstart;
   MPI_Allreduce(&t_total,&time,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
   if(Me==0)
   {
-    printf("Total Elapsed Time = %f \n", time);
+    printf("Total Elapsed Time for Matrix Initialisation = %f \n", time);
+  }
+
+  tstart=MPI_Wtime();
+  Pb1.TimeIteration();
+  tend=MPI_Wtime();
+  t_total=tend-tstart;
+  MPI_Allreduce(&t_total,&time,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+  if(Me==0)
+  {
+    printf("Total Elapsed Time for Solving = %f \n", time);
   }
   Pb1.PostProcessing();
 
