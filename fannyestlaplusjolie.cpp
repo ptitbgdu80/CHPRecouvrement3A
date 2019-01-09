@@ -108,6 +108,7 @@ void Probleme::charge()
 
   _Bp.setZero((_iN-_i1-1)*_NbCol);
   _Up.setZero((_iN-_i1-1)*_NbCol);
+  _Utemps.setZero((_iN-_i1-1)*_NbCol);
 }
 
 void Probleme::initializeSolver()
@@ -145,18 +146,23 @@ void Probleme::initializeSolver()
   _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
 
   //Bord bas
-  for (int indice = 0; indice < _NbCol; indice ++)
+  if(_Me!=0)
   {
-    //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
-    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
+    for (int indice = 0; indice < _NbCol; indice ++)
+    {
+      //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
+      _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
+    }
   }
   //Bord haut
-  for (int indice = _NbCol*(_iN-_i1-2); indice < _NbCol*(_iN-_i1-1); indice ++)
+  if(_Me!=_Np-1)
   {
-    //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
-    _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
+    for (int indice = _NbCol*(_iN-_i1-2); indice < _NbCol*(_iN-_i1-1); indice ++)
+    {
+      //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
+      _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
+    }
   }
-
   _solver.compute(_Ap);
 
   if (_Me == 0)
@@ -246,7 +252,7 @@ void Probleme::calculB()
       }
       else
       {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Up[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
+        _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Utemps[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
       }
        if (nl == 1)
        {
@@ -379,6 +385,7 @@ void Probleme::TimeIteration()
     SaveIteration();
     _t += _Dt;
     erreur = _Epsilon+1.;
+    _Utemps=_Up;
     while(erreur > _Epsilon)
     {
       iter=iter+1;
