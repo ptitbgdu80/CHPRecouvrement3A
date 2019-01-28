@@ -106,9 +106,9 @@ void Probleme::charge()
     _iN += recHaut;
   }
 
-  _Bp.setZero((_iN-_i1-1)*_NbCol);
-  _Up.setZero((_iN-_i1-1)*_NbCol);
-  _Utemps.setZero((_iN-_i1-1)*_NbCol);
+  _Bp.setZero((_iN-_i1+1)*_NbCol);
+  _Up.setZero((_iN-_i1+1)*_NbCol);
+  _Utemps.setZero((_iN-_i1+1)*_NbCol);
 }
 
 void Probleme::initializeSolver()
@@ -121,54 +121,151 @@ void Probleme::initializeSolver()
 
   std::vector<Eigen::Triplet<double>> liste_elem;
 
-  for (int indice = 0; indice < (_iN-_i1-1)*_NbCol; indice++)
+  if(_alpha!=0) //MIXTE
   {
-    liste_elem.push_back({indice,indice,_C1});
-  }
-
-  for (int indice = 0; indice < (_iN-_i1-1)*_NbCol-1; indice++)
-  {
-    if ((indice+1)%_NbCol != 0)
+    if (_Me == 0)
     {
-      liste_elem.push_back({indice,indice+1,_C2});
-      liste_elem.push_back({indice+1,indice,_C2});
+      for (int indice = 0; indice <_NbCol; indice++)
+      {
+        liste_elem.push_back({indice,indice,1.});
+      }
+    }
+    else
+    {
+      for (int indice = 0; indice < _NbCol; indice++)
+      {
+        liste_elem.push_back({indice,indice,_C1});
+      }
+
+      for (int indice = 0; indice < _NbCol-1; indice++)
+      {
+        if ((indice+1)%_NbCol != 0)
+        {
+          liste_elem.push_back({indice,indice+1,_C2});
+          liste_elem.push_back({indice+1,indice,_C2});
+        }
+      }
+
+      for (int indice = 0 ; indice < _NbCol; indice++)
+      {
+        liste_elem.push_back({indice,_NbCol+indice,_C3});
+      }
+    }
+
+    if (_Me == _Np-1)
+    {
+      for (int indice = 0; indice <_NbCol; indice++)
+      {
+        liste_elem.push_back({(_iN-_i1)*_NbCol+indice,(_iN-_i1)*_NbCol+indice,1.});
+      }
+    }
+    else
+    {
+      for (int indice = (_iN-_i1)*_NbCol; indice < (_iN-_i1+1)*_NbCol; indice++)
+      {
+        liste_elem.push_back({indice,indice,_C1});
+      }
+
+      for (int indice = (_iN-_i1)*_NbCol; indice < (_iN-_i1+1)*_NbCol-1; indice++)
+      {
+        if ((indice+1)%_NbCol != 0)
+        {
+          liste_elem.push_back({indice,indice+1,_C2});
+          liste_elem.push_back({indice+1,indice,_C2});
+        }
+      }
+
+      for (int indice = (_iN-_i1)*_NbCol; indice < (_iN-_i1+1)*_NbCol; indice++)
+      {
+        liste_elem.push_back({indice,indice-_NbCol,_C3});
+      }
+    }
+
+    //Cas général : centre de la matrice
+    for (int indice = _NbCol; indice < (_iN-_i1)*_NbCol; indice++)
+    {
+      liste_elem.push_back({indice,indice,_C1});
+    }
+
+    for (int indice = _NbCol; indice < (_iN-_i1)*_NbCol-1; indice++)
+    {
+      if ((indice+1)%_NbCol != 0)
+      {
+        liste_elem.push_back({indice,indice+1,_C2});
+        liste_elem.push_back({indice+1,indice,_C2});
+      }
+    }
+
+    for (int indice = _NbCol ; indice < (_iN-_i1)*_NbCol ; indice++)
+    {
+      liste_elem.push_back({indice,_NbCol+indice,_C3});
+      liste_elem.push_back({indice,indice-_NbCol,_C3});
+    }
+
+    _Ap.resize((_iN-_i1+1)*_NbCol,(_iN-_i1+1)*_NbCol);
+    _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
+
+    //Bord bas
+    if(_Me!=0)
+    {
+      for (int indice = 0; indice < _NbCol; indice ++)
+      {
+        //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
+        _Ap.coeffRef(indice,indice) -= _C3*2.*_Dy*_beta/_alpha;
+        _Ap.coeffRef(indice,indice+_NbCol) += _C3;
+      }
+    }
+    //Bord haut
+    if(_Me!=_Np-1)
+    {
+      for (int indice = _NbCol*(_iN-_i1); indice < _NbCol*(_iN-_i1+1); indice ++)
+      {
+        //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
+        _Ap.coeffRef(indice,indice) -= _C3*2.*_Dy*_beta/_alpha;
+        _Ap.coeffRef(indice,indice-_NbCol) += _C3;
+      }
     }
   }
 
-  for (int indice = 0 ; indice < (_iN-_i1-2)*_NbCol ; indice++)
+  else //DIRICHLET
   {
-    liste_elem.push_back({indice,_NbCol+indice,_C3});
-    liste_elem.push_back({_NbCol+indice,indice,_C3});
-  }
-
-
-  _Ap.resize((_iN-_i1-1)*_NbCol,(_iN-_i1-1)*_NbCol);
-  _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
-
-  //Bord bas
-  if(_Me!=0)
-  {
-    for (int indice = 0; indice < _NbCol; indice ++)
+    for (int indice = 0; indice <_NbCol; indice++)
     {
-      //Le coeff vaut alors C1 + C3(alpha/(alpha-beta*Dy))
-      _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha-_beta*_Dy);
+      liste_elem.push_back({indice,indice,1.});
+      liste_elem.push_back({(_iN-_i1)*_NbCol+indice,(_iN-_i1)*_NbCol+indice,1.});
     }
-  }
-  //Bord haut
-  if(_Me!=_Np-1)
-  {
-    for (int indice = _NbCol*(_iN-_i1-2); indice < _NbCol*(_iN-_i1-1); indice ++)
+
+    for (int indice = _NbCol; indice < (_iN-_i1)*_NbCol; indice++)
     {
-      //Le coeff vaut alors C1 + C3(alpha/(alpha+beta*Dy))
-      _Ap.coeffRef(indice,indice) += _C3*_alpha/(_alpha+_beta*_Dy);
+      liste_elem.push_back({indice,indice,_C1});
     }
+
+    for (int indice = _NbCol; indice < (_iN-_i1)*_NbCol-1; indice++)
+    {
+      if ((indice+1)%_NbCol != 0)
+      {
+        liste_elem.push_back({indice,indice+1,_C2});
+        liste_elem.push_back({indice+1,indice,_C2});
+      }
+    }
+
+    for (int indice = _NbCol ; indice < (_iN-_i1)*_NbCol ; indice++)
+    {
+      liste_elem.push_back({indice,_NbCol+indice,_C3});
+      liste_elem.push_back({indice,indice-_NbCol,_C3});
+    }
+
+    _Ap.resize((_iN-_i1+1)*_NbCol,(_iN-_i1+1)*_NbCol);
+    _Ap.setFromTriplets(liste_elem.begin(), liste_elem.end());
   }
+
   _solver.compute(_Ap);
 
-  if (_Me == 0)
+  if (_Me == _Np-1)
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Initialisation terminée" << std::endl;
+    // std::cout << _Ap << std::endl;
   }
 
 }
@@ -241,52 +338,122 @@ double Probleme::h(double x, double y)
 
 void Probleme::calculB()
 {
-  for (int nl = _i1+1; nl < _iN; nl++)
+  if(_alpha!=0.)
   {
-    for (int nc = 1; nc < _NbCol+1; nc++)
+    for (int nl = _i1; nl < _iN+1; nl++)
     {
-      //Cas général B = f + u^n/Dt
-      if(_choix==stationnaire1 || _choix==stationnaire2)
+      for (int nc = 1; nc < _NbCol+1; nc++)
       {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1] = f(nc*_Dx,nl*_Dy,_t);
-      }
-      else
-      {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1] = _Utemps[(nl-_i1-1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
-      }
-       if (nl == 1)
-       {
-         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,0)/pow(_Dy,2);
-       }
-       else if (nl == _NbLignes)
-       {
-         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*g(nc*_Dx,_Ly)/pow(_Dy,2);
-       }
-        else if (nl == _i1+1)
+        //Cas général B = f + u^n/Dt
+        if(_choix==stationnaire1 || _choix==stationnaire2)
         {
-          _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _C3*_CondBas[nc-1]*_Dy/(_alpha-_beta*_Dy);
+          _Bp[(nl-_i1)*_NbCol + nc-1] = f(nc*_Dx,nl*_Dy,_t);
         }
-       else if (nl == _iN-1)
-       {
-         _Bp[(nl-_i1-1)*_NbCol + nc-1]+= -_C3*_CondHaut[nc-1]*_Dy/(_alpha+_beta*_Dy);
-       }
+        else
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1] = _Utemps[(nl-_i1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
+        }
 
+        if (nc == 1)
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1] += _C2*h(0.,nl*_Dy);
+        }
+        else if (nc == _NbCol)
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1] -= _C2*h(_Lx,nl*_Dy);
+        }
+      }
+    }
 
-      if (nc == 1)
+    if (_Me == 0)
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
       {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*h(0,nl*_Dy)/pow(_Dx,2);
+        _Bp[nc-1] = g(nc*_Dx,0.);
       }
-      else if (nc == _NbCol)
+    }
+    else
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
       {
-        _Bp[(nl-_i1-1)*_NbCol + nc-1]+= _D*h(_Lx,nl*_Dy)/pow(_Dx,2);
+        _Bp[nc-1] -= 2*_CondBas[nc-1]*_Dy*_C3/_alpha;
       }
-     }
-   }
-  //  if (_Me==0)
-  //  {
-  //    std::cout << _Bp << std::endl;
-  //  }
- }
+    }
+
+    if (_Me == _Np-1)
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[(_iN-_i1)*_NbCol + nc-1] = g(nc*_Dx,_Ly);
+      }
+    }
+    else
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[(_iN-_i1)*_NbCol+nc-1] -= 2*_CondHaut[nc-1]*_Dy*_C3/_alpha;
+      }
+    }
+  }
+
+  else
+  {
+    for (int nl = _i1+1; nl < _iN; nl++)
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        //Cas général B = f + u^n/Dt
+        if(_choix==stationnaire1 || _choix==stationnaire2)
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1] = f(nc*_Dx,nl*_Dy,_t);
+        }
+        else
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1] = _Utemps[(nl-_i1)*_NbCol + nc-1]/_Dt + f(nc*_Dx,nl*_Dy,_t);
+        }
+
+        if (nc == 1)
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1]+= _C2*h(0.,nl*_Dy);
+        }
+        else if (nc == _NbCol)
+        {
+          _Bp[(nl-_i1)*_NbCol + nc-1]-= _C2*h(_Lx,nl*_Dy);
+        }
+      }
+    }
+
+    if (_Me == 0)
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[nc-1] = g(nc*_Dx,0.);
+      }
+    }
+    else
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[nc-1] = _CondBas[nc-1];
+      }
+    }
+
+    if (_Me == _Np-1)
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[(_iN-_i1)*_NbCol + nc-1] = g(nc*_Dx,_Ly);
+      }
+    }
+    else
+    {
+      for (int nc = 1; nc < _NbCol+1; nc++)
+      {
+        _Bp[(_iN-_i1)*_NbCol+nc-1] = _CondHaut[nc-1];
+      }
+    }
+  }
+}
 
 void Probleme::communication()
 {
@@ -299,12 +466,12 @@ void Probleme::communication()
       // K = alpha/Dy*(u_(i+1) - u_i) + beta*u_(i+1)
     if (_Me!=_Np-1)
     {
-      tempHaut[nc] = (_alpha/_Dy)*(_Up[(_iN-_i1-_rec)*_NbCol+nc] - _Up[(_iN-_i1-_rec-1)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec)*_NbCol+nc];
+      tempHaut[nc] = -_alpha/(2.*_Dy)*(_Up[(_iN-_i1-_rec+2)*_NbCol+nc] - _Up[(_iN-_i1-_rec)*_NbCol+nc]) + _beta*_Up[(_iN-_i1-_rec+1)*_NbCol+nc];
     }
       // K = alpha/Dy*(u_i - u_(i-1)) + beta*u_(i-1)
     if (_Me!=0)
     {
-      tempBas[nc] = (_alpha/_Dy)*(_Up[(_rec-1)*_NbCol+nc] - _Up[(_rec-2)*_NbCol+nc]) + _beta*_Up[(_rec-2)*_NbCol+nc];
+      tempBas[nc] = _alpha/(2.*_Dy)*(_Up[(_rec)*_NbCol+nc] - _Up[(_rec-2)*_NbCol+nc]) + _beta*_Up[(_rec-1)*_NbCol+nc];
     }
   }
 
@@ -312,7 +479,6 @@ void Probleme::communication()
   //Les procs pairs envoient puis reçoivent
   if (_Me%2 == 0)
   {
-
     if (_Me!=_Np-1)
     {
       MPI_Send(&tempHaut[0],_NbCol,MPI_DOUBLE,_Me+1,10*_Me,MPI_COMM_WORLD);
@@ -386,21 +552,25 @@ void Probleme::TimeIteration()
     _t += _Dt;
     erreur = _Epsilon+1.;
     _Utemps=_Up;
+
+    /*Boucles de Schwarz*/
     while(erreur > _Epsilon)
     {
       iter=iter+1;
       communication();
       calculB();
       Up_Avant=_Up;
+
       _Up=_solver.solve(_Bp);
-      erreurloc=(_Up-Up_Avant).norm();
+
+      erreurloc=(_Up-Up_Avant).norm()/_Up.norm();
       MPI_Allreduce(&erreurloc,&erreur,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
       if(_Me==0)
       {
         std::cout << erreur <<std::endl;
       }
     }
-    std::cout << "_t = " << _t << std::endl;
+    // std::cout << "_t = " << _t << std::endl;
   }
   if (_Me == 0)
   {
@@ -430,7 +600,7 @@ void Probleme::SaveIteration()
       for (int nc = 1; nc < _NbCol+1; nc++)
       {
         //Le premier élément de Up à prendre est celui d'indice 0
-        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-1)*_NbCol+nc-1] << std::endl;
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl)*_NbCol+nc-1] << std::endl;
       }
     }
   }
@@ -444,7 +614,7 @@ void Probleme::SaveIteration()
       {
         // std::cout << nl << " " << nc << std::endl;
         //Le premier élément de Up à prendre est celui d'indice 0
-        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-1)*_NbCol+nc-1] << std::endl;
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl)*_NbCol+nc-1] << std::endl;
       }
     }
   }
@@ -456,7 +626,7 @@ void Probleme::SaveIteration()
       for(int nc = 1; nc < _NbCol+1; nc++)
       {
         //Le premier élément de Up à prendre est celui d'indice (i1SansRec - i1 - 1)*NbCol
-        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1-1)*_NbCol + nc-1] << std::endl;
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1)*_NbCol + nc-1] << std::endl;
       }
     }
   }
@@ -469,7 +639,7 @@ void Probleme::SaveIteration()
       for(int nc = 1; nc < _NbCol+1; nc++)
       {
         //Le premier élément de Up à prendre est celui d'indice (i1SansRec - i1 - 1)*NbCol
-        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1-1)*_NbCol + nc-1] << std::endl;
+        mon_flux << nc*_Dx << " " << nl*_Dy << " " << _Up[(nl-_i1)*_NbCol + nc-1] << std::endl;
       }
     }
   }
