@@ -691,7 +691,7 @@ void Probleme::CreationVtk()
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
-  //permet de démarrer avec un _t "multiple" de _Dt
+  // permet de démarrer avec un _t "multiple" de _Dt
   double tmin = floor(_Me*_tmax/(_Np*_Dt))*_Dt;
   double tmax = floor((_Me+1)*_tmax/(_Np*_Dt))*_Dt;
   std::cout << tmin << " " << tmax << std::endl;
@@ -702,7 +702,7 @@ void Probleme::CreationVtk()
 
   for (_t = tmin; _t < tmax; _t += _Dt)
   {
-    //+0.1 pour éviter les erreurs d'arrondis, sachant que t/Dt est censé être entier
+    // +0.1 pour éviter les erreurs d'arrondis, sachant que t/Dt est censé être entier
     int it = floor(_t/_Dt+0.1);
 
     std::ofstream mon_flux;

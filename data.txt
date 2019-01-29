@@ -12,11 +12,11 @@ tmax
 Dt
 2.
 Nombre de lignes
-500
-Nombre de colonnes
-500
-Recouvrement
 100
+Nombre de colonnes
+100
+Recouvrement
+2
 Dimension du domaine selon x
 1.
 Dimension du domaine selon y
