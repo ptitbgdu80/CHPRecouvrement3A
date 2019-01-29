@@ -370,7 +370,7 @@ void Probleme::calculB()
         //Condition bord gauche
         if (nc == 1)
         {
-          _Bp[(nl-_i1)*_NbCol + nc-1] += _C2*h(0.,nl*_Dy);
+          _Bp[(nl-_i1)*_NbCol + nc-1] -= _C2*h(0.,nl*_Dy);
         }
         //Condition bord droit
         else if (nc == _NbCol)
@@ -434,7 +434,7 @@ void Probleme::calculB()
         //Bord gauche
         if (nc == 1)
         {
-          _Bp[(nl-_i1)*_NbCol + nc-1]+= _C2*h(0.,nl*_Dy);
+          _Bp[(nl-_i1)*_NbCol + nc-1]-= _C2*h(0.,nl*_Dy);
         }
         //Bord droit
         else if (nc == _NbCol)
@@ -595,12 +595,11 @@ void Probleme::TimeIteration()
 
       erreurloc=(_Up-Up_Avant).norm()/_Up.norm();
       MPI_Allreduce(&erreurloc,&erreur,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
-      if(_Me==0)
-      {
-        std::cout << erreur <<std::endl;
-      }
     }
-    // std::cout << "_t = " << _t << std::endl;
+    if (_Me == 0)
+    {
+      std::cout << "t = " << _t << " imax = " << iter << std::endl;
+    }
   }
   if (_Me == 0)
   {
@@ -608,7 +607,6 @@ void Probleme::TimeIteration()
     std::cout << "Résolution effectuée avec succès" << std::endl;
   }
   SaveIteration();
-  std::cout << "iter =" << iter << std::endl;
 }
 
 void Probleme::SaveIteration()
@@ -724,7 +722,7 @@ void Probleme::CreationVtk()
   // permet de démarrer avec un _t "multiple" de _Dt
   double tmin = floor(_Me*_tmax/(_Np*_Dt))*_Dt;
   double tmax = floor((_Me+1)*_tmax/(_Np*_Dt))*_Dt;
-  std::cout << tmin << " " << tmax << std::endl;
+
   if (_Me == _Np-1)
   {
     tmax = _tmax + _Dt/2;

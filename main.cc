@@ -1,4 +1,4 @@
-#include "fannyestlaplusjolie.h"
+#include "schwarz.h"
 #include "DataFile.h"
 
 int main(int argc, char * argv[])
@@ -13,7 +13,6 @@ int main(int argc, char * argv[])
   Probleme Pb1(file);
   Pb1.charge();
   Pb1.initializeSolver();
-
 
   Pb1.TimeIteration();
 
